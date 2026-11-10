@@ -348,3 +348,7 @@
 - 15分くらい詰まったら、Claude Codeに質問して先に進める。
 - CLAUDE.mdにルール（1issue＝1機能、実装したら内容を説明させる）を設けて、理解しながら進める。
 - MVPの範囲を守り、MVPリリースを早期に実現する。
+
+## 11. 画面遷移図
+
+Figma：https://www.figma.com/design/EBUQYpOnD2E8aNifAtCPLQ/phone-memo?node-id=0-1&t=O28MVpZtDnbCxXru-1
