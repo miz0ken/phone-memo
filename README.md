@@ -352,3 +352,7 @@
 ## 11. 画面遷移図
 
 Figma：https://www.figma.com/design/EBUQYpOnD2E8aNifAtCPLQ/phone-memo?node-id=0-1&t=O28MVpZtDnbCxXru-1
+
+## 12. ER図
+
+dbdiagram.io：https://dbdiagram.io/d/phone-memo-ER図-6afb3cc6d4a729077d020bf3
