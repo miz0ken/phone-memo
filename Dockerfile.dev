@@ -1,0 +1,43 @@
+# 開発用コンテナのイメージ定義。本番用の Dockerfile（rails new が作る想定）とは別物。
+ARG RUBY_VERSION=3.4
+FROM ruby:${RUBY_VERSION}-slim
+
+# Rails / pg gem のビルドや DB 接続確認に必要なパッケージ
+RUN apt-get update -qq && apt-get install -y --no-install-recommends \
+      build-essential \
+      git \
+      libpq-dev \
+      libyaml-dev \
+      postgresql-client \
+    && rm -rf /var/lib/apt/lists/*
+
+# `rails new` を実行するためにグローバルへ rails gem を入れる
+# （生成後は Gemfile に書かれた rails のバージョンが実際に使われる）
+RUN gem install rails -v "~> 8.1.0" --no-document
+
+# WSL2 のホストユーザー（mizoken, UID/GID 1000）と合わせることで、
+# コンテナ内で生成したファイルが root 所有にならないようにする
+ARG UID=1000
+ARG GID=1000
+RUN groupadd -g "${GID}" rails \
+    && useradd -m -u "${UID}" -g "${GID}" -s /bin/bash rails
+
+WORKDIR /app
+RUN chown rails:rails /app
+
+# bundle install した gem を名前付きボリュームに保存し、コンテナを作り直しても使い回す
+# （名前付きボリュームは最初のマウント時にこのディレクトリの内容・権限をコピーするため、
+#   ここで rails ユーザーに所有権を渡しておく）
+RUN mkdir -p /home/rails/bundle && chown -R rails:rails /home/rails/bundle
+
+USER rails
+
+ENV BUNDLE_PATH=/home/rails/bundle
+ENV PATH="/home/rails/bundle/bin:${PATH}"
+
+COPY --chown=rails:rails docker/entrypoint.dev.sh /usr/local/bin/entrypoint.dev.sh
+ENTRYPOINT ["entrypoint.dev.sh"]
+
+EXPOSE 3000
+
+CMD ["bash"]

@@ -1,0 +1,59 @@
+services:
+  db:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: phone_memo_development
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    ports:
+      - "5432:5432"
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+      args:
+        UID: "1000"
+        GID: "1000"
+    command: bin/rails server -b 0.0.0.0
+    environment:
+      DATABASE_HOST: db
+      DATABASE_USERNAME: postgres
+      DATABASE_PASSWORD: password
+    volumes:
+      - .:/app
+      - bundle_data:/home/rails/bundle
+    ports:
+      - "3000:3000"
+    depends_on:
+      db:
+        condition: service_healthy
+    tty: true
+    stdin_open: true
+
+  # Tailwind CSS の watch を web と別のコンテナで動かし続ける
+  # （web を再起動してもCSSの自動作り直しが止まらないようにするため）
+  css:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+      args:
+        UID: "1000"
+        GID: "1000"
+    # tailwindcss:watch は標準入力が無いと終了してしまうため、
+    # 標準入力の有無に関わらず監視を続ける [always] を指定する
+    command: bin/rails "tailwindcss:watch[always]"
+    volumes:
+      - .:/app
+      - bundle_data:/home/rails/bundle
+
+volumes:
+  db_data:
+  bundle_data:
